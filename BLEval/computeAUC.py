@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -83,6 +82,9 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
             PRName = '/uPRplot'
             ROCName = '/uROCplot'
     if (plotFlag):
+        outplotDir = outDir+'/plot'
+        import os
+        os.makedirs(outplotDir, exist_ok=True)
          ## Make PR curves
         legendList = []
         for key in recallDict.keys():
@@ -93,8 +95,8 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.legend(legendList) 
-        plt.savefig(outDir+PRName+'.pdf')
-        plt.savefig(outDir+PRName+'.png')
+        plt.savefig(outplotDir+PRName+'.pdf')
+        plt.savefig(outplotDir+PRName+'.png')
         plt.clf()
 
         ## Make ROC curves
@@ -110,8 +112,8 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
         plt.xlabel('FPR')
         plt.ylabel('TPR')
         plt.legend(legendList) 
-        plt.savefig(outDir+ROCName+'.pdf')
-        plt.savefig(outDir+ROCName+'.png')
+        plt.savefig(outplotDir+ROCName+'.pdf')
+        plt.savefig(outplotDir+ROCName+'.png')
         plt.clf()
     return AUPRC, AUROC
 

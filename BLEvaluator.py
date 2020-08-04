@@ -1,3 +1,6 @@
+"""
+python BLEvaluator.py --config 'config-files/Curated/GSD.yaml'
+"""
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -28,11 +31,11 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('-c','--config', default='config.yaml',
+    parser.add_argument('-c','--config', default='config-files/mESC.yaml',
         help="Configuration file containing list of datasets "
               "algorithms and output specifications.\n")
     
-    parser.add_argument('-a', '--auc', action="store_true", default=False,
+    parser.add_argument('-a', '--auc', action="store_true", default=True,
         help="Compute median of areas under Precision-Recall and ROC curves.\n")
     
     parser.add_argument('-j', '--jaccard', action="store_true", default=False,

@@ -10,7 +10,6 @@ cd $BASEDIR/Algorithms/ARBORETO
 docker build -q -t arboreto:base .
 echo "Docker container for ARBORETO is built and tagged as arboreto:base"
 
-
 cd $BASEDIR/Algorithms/GRISLI/
 docker build -q -t grisli:base .
 echo "Docker container for GRISLI is built and tagged as grisli:base"
@@ -61,5 +60,4 @@ docker build -q -t sincerities:base .
 echo "Docker container for SINCERITIES is built and tagged as sincerities:base"
 
 cd $BASEDIR
-
 

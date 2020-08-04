@@ -6,7 +6,7 @@ input_settings:
     input_dir : "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "example"
+    dataset_dir: "scRNA-seq"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
@@ -14,12 +14,12 @@ input_settings:
     #
     #   exprData: scRNA-Seq expression data file. Cells are along the
     #            columns and genes are along the rows.
-    #   cellData: a file containing pseudotime ordering, or any other 
+    #   cellData: a file containing pseudotime ordering, or any other
     #             information about cells.
     #   trueEdges: Name of the refrence network file in the
     #              edge list format. Needed for evaluation.
     datasets:
-        - name: "GSD"
+        - name: "mESC"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
@@ -34,78 +34,74 @@ input_settings:
     #       should be specified in the params map for a given algorithm
     #
     algorithms:
-        - name: "INVASE"
-          params:
-              should_run: [True]
-              epochs: [100]
 
-              
+
         - name: "PIDC"
-          params: 
+          params:
               should_run: [True]
 
 
         - name: "GRNVBEM"
-          params: 
-              should_run: [True]
+          params:
+              should_run: [False]
 
-              
+
 
         - name: "GENIE3"
-          params: 
+          params:
               should_run: [True]
-              
-              
-              
+
+
+
         - name: "GRNBOOST2"
-          params: 
+          params:
               should_run: [True]
-              
-              
+
+
         - name: "PPCOR"
-          params: 
+          params:
               should_run: [True]
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]
-              
-               
+
+
         - name: "SCODE"
           params:
-              should_run: [True]
+              should_run: [False]
               z: [10]
               nIter: [1000]
               nRep: [6]
 
         - name: "SCNS"
-          params: 
+          params:
               should_run: [False]
-              
-              
+
+
         - name: "SINCERITIES"
-          params: 
-              should_run: [True]
+          params:
+              should_run: [False]
               nBins: [10]
-              
-              
+
+
         - name: "LEAP"
-          params: 
-              should_run: [True]
+          params:
+              should_run: [False]
               # Default maxLag value is 0.33
               maxLag: [0.33]
-             
-              
+
+
         - name: "GRISLI"
-          params: 
-              should_run: [True]
+          params:
+              should_run: [False]
               L: [10]
               R: [3000]
               alphaMin: [0.0]
 
 
         - name: "SCINGE"
-          params: 
-              should_run: [True]
+          params:
+              should_run: [False]
               lambda: [0.01]
               dT: [15]
               num_lags: [5]
@@ -117,14 +113,14 @@ input_settings:
 
 
         - name: "SCRIBE"
-          params: 
-              should_run: [True]
+          params:
+              should_run: [False]
               ### required parameters
               # a list of delay values
               delay: ["5"]
               # any of 'RDI', 'uRDI', 'cRDI', or 'ucRDI'
               method: ['ucRDI']
-              # lower detection limit (expression below this 
+              # lower detection limit (expression below this
               # will be treated as zero.
               lowerDetectionLimit: [0]
               # expressionFamily: for synthetic data use uninormal

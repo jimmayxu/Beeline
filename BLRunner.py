@@ -1,3 +1,8 @@
+"""
+python BLRunner.py --config 'config-files/Curated/GSD.yaml'
+"""
+
+
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -35,7 +40,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('--config', default='config.yaml',
+    parser.add_argument('--config', default='config-files/config.yaml',
         help='Path to config file')
 
     return parser
@@ -53,7 +58,6 @@ def parse_arguments():
 def main():
     opts = parse_arguments()
     config_file = opts.config
-
 
     with open(config_file, 'r') as conf:
         evaluation = br.ConfigParser.parse(conf)
@@ -75,3 +79,5 @@ def main():
 
 if __name__ == '__main__':
   main()
+
+
