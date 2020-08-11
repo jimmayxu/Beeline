@@ -29,7 +29,7 @@ from networkx.convert_matrix import from_pandas_adjacency
 
 # local imports
 from BLEval.parseTime import getTime
-from BLEval.computeDGAUC import PRROC
+from BLEval.computeAUC import PRROC
 from BLEval.computeJaccard import Jaccard
 from BLEval.computeSpearman import Spearman
 from BLEval.computeNetMotifs import Motifs

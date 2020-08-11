@@ -13,16 +13,17 @@ def generateInputs(RunnerObj):
         print("Input folder for PPCOR does not exist, creating input folder...")
         RunnerObj.inputDir.joinpath("PPCOR").mkdir(exist_ok = False)
         
-    if not RunnerObj.inputDir.joinpath("PPCOR/ExpressionData.csv").exists():
-        ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
-                                     header = 0, index_col = 0)
-        
-        newExpressionData = ExpressionData.copy()
-        
-        # Write .csv file
-        newExpressionData.to_csv(RunnerObj.inputDir.joinpath("PPCOR/ExpressionData.csv"),
-                             sep = ',', header  = True, index = True)
-    
+    #if not RunnerObj.inputDir.joinpath("PPCOR/ExpressionData.csv").exists():
+    #ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
+    #                             header = 0, index_col = 0)
+    ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'), index_col=0)
+    #ExpressionCounts.columns = ExpressionCounts.columns.str.replace('.', '_')
+    #Exp = ExpressionCounts.loc[ExpressionData.index, ExpressionData.columns]
+    Exp = ExpressionCounts.copy()
+    #ExpressionData = np.log(Exp + 1)
+    Exp.to_csv(RunnerObj.inputDir.joinpath("PPCOR/ExpressionData.csv"),
+                         sep = '\t', header  = True, index = True)
+
 def run(RunnerObj):
     '''
     Function to run PPCOR algorithm

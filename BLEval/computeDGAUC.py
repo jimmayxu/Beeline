@@ -77,7 +77,12 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
                                             sep = '\t', header =  0, index_col = None)
 
                 precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores(trueEdgesDF, predDF, directed = False, selfEdges = selfEdges)
+                if algo[0]=='INVASE':
+                    predDF = pd.read_csv(outDir + '/' + algo[0] + '/rankedEdges2.csv', \
+                                         sep='\t', header=0, index_col=None)
 
+                    precisionDict['INVASE2'], recallDict['INVASE2'], FPRDict['INVASE2'], TPRDict['INVASE2'], AUPRC['INVASE2'], \
+                    AUROC['INVASE2'] = computeScores(trueEdgesDF, predDF, directed=False, selfEdges=selfEdges)
             else:
                 print(outDir + '/' +algo[0]+'/rankedEdges.csv', \
                   ' does not exist. Skipping...')

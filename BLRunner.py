@@ -1,9 +1,17 @@
 """
+python BLRunner.py --config 'config-files/config.yaml'
 python BLRunner.py --config 'config-files/Curated/GSD.yaml'
+python BLRunner.py --config 'config-files/Curated/GSD_INVASE_only.yaml'
+
+python BLRunner.py --config 'config-files/scRNA-Seq/invase_only.yaml'
+python BLRunner.py --config 'config-files/scRNA-Seq/algo.yaml'
+
+
+python BLRunner.py --config 'config-files/SERGIO/invase_only.yaml'
+python BLRunner.py --config 'config-files/SERGIO/algo.yaml'
 """
 
 
-#!/usr/bin/env python
 # coding: utf-8
 
 # In[ ]:
@@ -40,7 +48,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('--config', default='config-files/config.yaml',
+    parser.add_argument('--config', default='config-files/Curated/GSD_INVASE_only.yaml',
         help='Path to config file')
 
     return parser

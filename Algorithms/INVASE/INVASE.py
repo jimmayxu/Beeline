@@ -35,21 +35,18 @@ def suppress_stdout():
 class INVASE:
     def __init__(
             self,
-            folder_name: str = 'toy',
             epochs: int = 100, #20
             batch_size: int = 1000,
             **kwargs
     ):
         self.TF_Genes = kwargs.get('TF_Genes', None)
-        self.model = Feature_Selection_models(method_name='INVASE', folder_name=folder_name, **kwargs)
+        self.model = Feature_Selection_models(method_name='INVASE', **kwargs)
         with suppress_stdout():
             self.config = INVASE_config(input_shape=len(self.TF_Genes), output_shape=1, activation='softplus',
                            epochs=epochs, batch_size=batch_size)
     def fit(self,  X_):
-        doTrainTest = False
-        TF2gene = self.model.fit(X_=X_, config=self.config, doTrainTest=doTrainTest)
-        return TF2gene
-
+        self.model.fit(X_=X_, config=self.config)
+        return self.model.TF2Gene_Prob, self.model.TF2Gene_Binary
 
 '''
 Written by Jinsung Yoon
@@ -97,9 +94,10 @@ class INVASE_config():
         # Activation. (For Syn1 and 2, relu, others, selu)
         self.activation = activation
 
+
+    def initialise(self):
         # Use Adam optimizer with learning rate = 0.0001
         optimizer = Adam(0.0001)
-
         # Build and compile the discriminator (critic)
         self.discriminator = self.build_discriminator()
         # Use categorical cross entropy as the loss
@@ -231,8 +229,8 @@ class INVASE_config():
         return samples
 
     #%% Training procedure
-    def train(self, x_train, y_train, x_val=None, y_val=None):
-
+    def train(self, x_train, y_train):
+        self.initialise()
         y_train = y_train.astype('float32')
         loss = pd.DataFrame()
         # For each epoch (actually iterations)

@@ -1,5 +1,9 @@
 """
 python BLEvaluator.py --config 'config-files/Curated/GSD.yaml'
+python BLEvaluator.py --config 'config-files/scRNA-Seq/algo_all.yaml'
+
+python BLEvaluator.py --config 'config-files/SERGIO/algo.yaml'
+python BLEvaluator.py --config 'config-files/SERGIO/algo_all.yaml'
 """
 #!/usr/bin/env python
 # coding: utf-8
@@ -19,6 +23,8 @@ from itertools import permutations
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
 from networkx.convert_matrix import from_pandas_adjacency
+from scipy.special import comb
+import matplotlib.pyplot as plt
 
 # local imports
 import BLEval as ev 
@@ -31,7 +37,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('-c','--config', default='config-files/mESC.yaml',
+    parser.add_argument('-c','--config', default='config-files/Curated/GSD.yaml',
         help="Configuration file containing list of datasets "
               "algorithms and output specifications.\n")
     
@@ -51,7 +57,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-t', '--time', action="store_true", default=False,
       help="Analyze time taken by each algorithm for a.\n")
     
-    parser.add_argument('-e', '--epr', action="store_true", default=False,
+    parser.add_argument('-e', '--epr', action="store_true", default=True,
       help="Compute median early precision.")
     
     parser.add_argument('-s','--sepr', action="store_true", default=False,
@@ -73,6 +79,14 @@ def parse_arguments():
     
     return opts
 
+def plot_df(df, outDir, name):
+    ax = df.T.plot()
+    x = np.arange(len(df.columns))
+    ax.set_xticks(x)
+    ax.set_xticklabels(df.columns)
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig(outDir + '%s.png' %name)
 def main():
     opts = parse_arguments()
     config_file = opts.config
@@ -94,6 +108,10 @@ def main():
         print('\n\nComputing areas under ROC and PR curves...')
 
         AUPRC, AUROC = evalSummarizer.computeAUC()
+
+        plot_df(AUROC, outDir, 'AUROC')
+        plot_df(AUPRC, outDir, 'AUPRC')
+
         AUPRC.to_csv(outDir+'AUPRC.csv')
         AUROC.to_csv(outDir+'AUROC.csv')
     
@@ -122,6 +140,8 @@ def main():
     if (opts.epr):
         print('\n\nComputing early precision values...')
         ePRDF = evalSummarizer.computeEarlyPrec()
+
+        plot_df(ePRDF, outDir, 'EPr')
         ePRDF.to_csv(outDir + "EPr.csv")
                         
     # Compute early precision for activation and inhibitory edges
@@ -143,6 +163,7 @@ def main():
 
 
     print('\n\nEvaluation complete...\n')
+
 
 
 if __name__ == '__main__':

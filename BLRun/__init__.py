@@ -84,7 +84,7 @@ class BLRun(object):
                 data['params'] = runner[1]
                 data['inputDir'] = Path.cwd().joinpath(self.input_settings.datadir.joinpath(dataset['name']))
                 data['exprData'] = dataset['exprData']
-                data['cellData'] = dataset['cellData']
+                #data['cellData'] = dataset['cellData']
                 data['trueEdges'] = dataset['trueEdges']
 
                 if 'should_run' in data['params'] and \

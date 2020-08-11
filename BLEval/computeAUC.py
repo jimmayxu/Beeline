@@ -26,7 +26,6 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
             - AUPRC: A dictionary containing AUPRC values for each algorithm
             - AUROC: A dictionary containing AUROC values for each algorithm
     '''
-    
     # Read file for trueEdges
     trueEdgesDF = pd.read_csv(str(inputSettings.datadir)+'/'+ dataDict['name'] +
                                 '/' +dataDict['trueEdges'],
@@ -45,7 +44,7 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
     outDir = "outputs/"+str(inputSettings.datadir).split("inputs/")[1]+ '/' +dataDict['name']
     
     if directed:
-        for algo in tqdm(inputSettings.algorithms, 
+        for algo in tqdm(inputSettings.algorithms,
                          total = len(inputSettings.algorithms), unit = " Algorithms"):
 
             # check if the output rankedEdges file exists
@@ -55,7 +54,14 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
                 predDF = pd.read_csv(outDir + '/' +algo[0]+'/rankedEdges.csv', \
                                             sep = '\t', header =  0, index_col = None)
 
-                precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores(trueEdgesDF, predDF, directed = True, selfEdges = selfEdges)
+                precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores_new(trueEdgesDF, predDF, directed = True, selfEdges = selfEdges)
+                if algo[0] == 'INVASE':
+                    predDF = pd.read_csv(outDir + '/' + algo[0] + '/rankedEdges2.csv', \
+                                         sep='\t', header=0, index_col=None)
+
+                    precisionDict['INVASE2'], recallDict['INVASE2'], FPRDict['INVASE2'], TPRDict['INVASE2'], AUPRC[
+                        'INVASE2'], \
+                    AUROC['INVASE2'] = computeScores_new(trueEdgesDF, predDF, directed=False, selfEdges=selfEdges)
 
             else:
                 print(outDir + '/' +algo[0]+'/rankedEdges.csv', \
@@ -75,6 +81,14 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
 
                 precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores(trueEdgesDF, predDF, directed = False, selfEdges = selfEdges)
 
+                if algo[0] == 'INVASE':
+                 predDF = pd.read_csv(outDir + '/' + algo[0] + '/rankedEdges2.csv', \
+                                      sep='\t', header=0, index_col=None)
+
+                 precisionDict['INVASE2'], recallDict['INVASE2'], FPRDict['INVASE2'], TPRDict['INVASE2'], AUPRC[
+                     'INVASE2'], \
+                 AUROC['INVASE2'] = computeScores_new(trueEdgesDF, predDF, directed=False, selfEdges=selfEdges)
+
             else:
                 print(outDir + '/' +algo[0]+'/rankedEdges.csv', \
                   ' does not exist. Skipping...')
@@ -82,7 +96,7 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
             PRName = '/uPRplot'
             ROCName = '/uROCplot'
     if (plotFlag):
-        outplotDir = outDir+'/plot'
+        outplotDir = outDir+'/'+dataDict['trueEdges']
         import os
         os.makedirs(outplotDir, exist_ok=True)
          ## Make PR curves
@@ -117,6 +131,56 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
         plt.clf()
     return AUPRC, AUROC
 
+def computeScores_new(trueEdgesDF, predEdgeDF,
+                  directed=True, selfEdges=True, edges_TFTG=False):
+    trueEdgesDF['importance'] = 1
+    trueEdgesDF = trueEdgesDF.loc[:, ['Gene1', 'Gene2', 'importance']]
+    gene_names = pd.Series(np.unique(trueEdgesDF.iloc[:,:2]))
+    TF_Genes = trueEdgesDF['Gene1']
+    target_Genes = trueEdgesDF['Gene2']
+
+    TF_index = gene_names.isin(TF_Genes)
+    TG_index = gene_names.isin(target_Genes)
+
+    edges = np.ix_(TF_index, TG_index) if edges_TFTG else np.triu_indices(len(gene_names), 1)
+
+    trueEdges_Adjacency = TF2Gene_transform2_adjacency(trueEdgesDF, gene_names)
+    predEdges_Adjacency = TF2Gene_transform2_adjacency(predEdgeDF, gene_names)
+    TrueEdgeScore = trueEdges_Adjacency[edges].flatten().astype(int)
+    PredEdgeScore = predEdges_Adjacency[edges].flatten()
+
+    fpr, tpr, thresholds = roc_curve(y_true=TrueEdgeScore,
+                                     y_score=PredEdgeScore, pos_label=1)
+
+    prec, recall, thresholds = precision_recall_curve(y_true=TrueEdgeScore,
+                                                      probas_pred=PredEdgeScore, pos_label=1)
+
+    return prec, recall, fpr, tpr, auc(recall, prec), auc(fpr, tpr)
+
+
+def TF2Gene_transform2_adjacency(TF2Gene, gene_names):
+    p = len(gene_names)
+    gene_names_ = gene_names.tolist()
+    exist = np.where(TF2Gene.iloc[:, 0].isin(gene_names_) & TF2Gene.iloc[:, 1].isin(gene_names_))[0]
+    TF2Gene_ = TF2Gene.iloc[exist]
+
+    temp1 = np.zeros([p, p])
+    for TF, target, importance in TF2Gene_.values.tolist():
+        temp1[gene_names_.index(TF), gene_names_.index(target)] = importance
+
+    """ sort out those correlation between two TFs. Set cor(TF1, TF2) = (importance(TF1->TF2) + importance(TF2->TF1))/2"""
+    TF_Genes = np.unique(TF2Gene_.values[:, 0])
+    values = TF2Gene_.isin(TF_Genes).values
+    TF2TF = TF2Gene_.loc[values[:, 0]*values[:, 1]]
+    temp2 = np.zeros([p, p])
+    for TF1, TF2, importance in TF2TF.values.tolist():
+        temp2[gene_names_.index(TF1), gene_names_.index(TF2)] = importance
+
+    adjacency = temp1 + temp1.T - (temp2 + temp2.T)/2
+    return(adjacency)
+
+
+
 def computeScores(trueEdgesDF, predEdgeDF, 
                   directed = True, selfEdges = True):
     '''        
@@ -145,8 +209,8 @@ def computeScores(trueEdgesDF, predEdgeDF,
             - AUROC: Area under the ROC curve
     '''
 
-    if directed:        
-        # Initialize dictionaries with all 
+    if directed:
+        # Initialize dictionaries with all
         # possible edges
         if selfEdges:
             possibleEdges = list(product(np.unique(trueEdgesDF.loc[:,['Gene1','Gene2']]),
@@ -165,7 +229,6 @@ def computeScores(trueEdgesDF, predEdgeDF,
             if len(trueEdgesDF.loc[(trueEdgesDF['Gene1'] == key.split('|')[0]) &
                    (trueEdgesDF['Gene2'] == key.split('|')[1])])>0:
                     TrueEdgeDict[key] = 1
-                
         for key in PredEdgeDict.keys():
             subDF = predEdgeDF.loc[(predEdgeDF['Gene1'] == key.split('|')[0]) &
                                (predEdgeDF['Gene2'] == key.split('|')[1])]
@@ -208,7 +271,6 @@ def computeScores(trueEdgesDF, predEdgeDF,
             if len(subDF)>0:
                 PredEdgeDict[key] = max(np.abs(subDF.EdgeWeight.values))
 
-                
                 
     # Combine into one dataframe
     # to pass it to sklearn
