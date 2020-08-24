@@ -24,14 +24,11 @@ class Feature_Selection_models:
         self.kwargs = kwargs
 
     def fit(self, X_, config):
-        assert pd.Series(self.target_Genes).isin(self.gene_names).all()
-        ## TRACK MEMORY FUNCTION #####
+        #assert pd.Series(self.target_Genes).isin(self.gene_names).all()
         index = np.where(self.gene_names.isin(self.TF_Genes))[0]
         target_index = np.where(self.gene_names.isin(self.target_Genes))[0]
 
-
-        x_train = X_[:, index].toarray()
-        self.x_test = x_train.copy()
+        self.x_train = X_[:, index].toarray()
         self.test_idx = None
 
         print('\nTraining for %s' % self.method_name)
@@ -44,7 +41,14 @@ class Feature_Selection_models:
                 self.target_Genes,
                 desc=("Training %s model for each target gene" % (self.method_name))
         ):
-
+            if target_Gene in self.TF_Genes:
+                i = pd.Series(self.TF_Genes).isin([target_Gene])
+                x_train = self.x_train[:, -i]
+                TF_Genes = list(pd.Series(self.TF_Genes)[-i])
+                config.input_shape = len(self.TF_Genes) - 1
+            else:
+                x_train = self.x_train
+                TF_Genes = self.TF_Genes
             y_train = X_[:, target_index[i]].toarray()
 
             print("\nTarget gene: %s" % (target_Gene))
@@ -55,16 +59,16 @@ class Feature_Selection_models:
 
             print('Time spent: %.2f minutes' % t)
 
-            Sel_Prob_Test, Sel_Binary_Test = config.Selected_Features(self.x_test)
+            Sel_Prob_Test, Sel_Binary_Test = config.Selected_Features(x_train)
 
-            self.NN_predict(target_Gene, Sel_Prob_Test, Sel_Binary_Test)
+            self.NN_predict(target_Gene, TF_Genes, Sel_Prob_Test, Sel_Binary_Test)
             i += 1
 
 
-    def NN_predict(self, target_Gene, Sel_Prob_Test, Sel_Binary_Test):
+    def NN_predict(self, target_Gene, TF_Genes, Sel_Prob_Test, Sel_Binary_Test):
         ave_Prob = Sel_Prob_Test.mean(axis=0)
         acc_Binary = Sel_Binary_Test.sum(axis=0)
-        for j, tf_name in enumerate(self.TF_Genes):
+        for j, tf_name in enumerate(TF_Genes):
             self.TF2Gene_Binary = self.TF2Gene_Binary.append(
                 {"TF": tf_name, "target": target_Gene, "vote": acc_Binary[j]}, ignore_index=True)
             self.TF2Gene_Prob = self.TF2Gene_Prob.append(

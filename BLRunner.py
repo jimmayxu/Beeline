@@ -1,14 +1,16 @@
 """
 python BLRunner.py --config 'config-files/config.yaml'
-python BLRunner.py --config 'config-files/Curated/GSD.yaml'
+python BLRunner.py --config 'config-files/Curated/GSD_all.yaml'
 python BLRunner.py --config 'config-files/Curated/GSD_INVASE_only.yaml'
+python BLRunner.py --config 'config-files/Curated/GSD.yaml'
 
-python BLRunner.py --config 'config-files/scRNA-Seq/invase_only.yaml'
+
+python BLRunner.py --config 'config-files/scRNA-Seq/invase_only100.yaml'
 python BLRunner.py --config 'config-files/scRNA-Seq/algo.yaml'
 
 
 python BLRunner.py --config 'config-files/SERGIO/invase_only.yaml'
-python BLRunner.py --config 'config-files/SERGIO/algo.yaml'
+python BLRunner.py --config 'config-files/SERGIO/algo_all.yaml'
 """
 
 
@@ -38,7 +40,7 @@ import pandas as pd
 
 import BLRun as br
 yaml.warnings({'YAMLLoadWarning': False})
-
+os.nice(20)
 
 def get_parser() -> argparse.ArgumentParser:
     '''
@@ -48,7 +50,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('--config', default='config-files/Curated/GSD_INVASE_only.yaml',
+    parser.add_argument('--config', default='config-files/SERGIO/invase_only.yaml',
         help='Path to config file')
 
     return parser

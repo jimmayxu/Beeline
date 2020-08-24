@@ -12,6 +12,25 @@ def generateInputs(RunnerObj):
     if not RunnerObj.inputDir.joinpath("GRNBOOST2").exists():
         print("Input folder for GRNBOOST2 does not exist, creating input folder...")
         RunnerObj.inputDir.joinpath("GRNBOOST2").mkdir(exist_ok = False)
+    #if not RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv").exists():
+    ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
+                                 header = 0, index_col = 0)
+
+    # Write .csv file
+    ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv"),
+                         sep = '\t', header  = True, index = True)
+
+    """
+    if not RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv").exists():
+        ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'),
+                                     header=0, index_col=0)
+        Exp = ExpressionCounts.copy()
+        ExpressionData = np.log(Exp + 1)
+        # Write .csv file
+        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv"),
+                                sep='\t', header=True, index=True)
+    """
+    """   
     if not RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)
@@ -19,6 +38,7 @@ def generateInputs(RunnerObj):
         # Write .csv file
         ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv"),
                              sep = '\t', header  = True, index = True)
+    """
     """
     #if not RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv").exists():
     #ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),

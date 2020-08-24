@@ -37,14 +37,16 @@ class INVASE:
             self,
             epochs: int = 100, #20
             batch_size: int = 1000,
+            loss_type: str = 'poisson',
             **kwargs
     ):
         self.TF_Genes = kwargs.get('TF_Genes', None)
         self.model = Feature_Selection_models(method_name='INVASE', **kwargs)
-        with suppress_stdout():
-            self.config = INVASE_config(input_shape=len(self.TF_Genes), output_shape=1, activation='softplus',
-                           epochs=epochs, batch_size=batch_size)
+
+        self.config = INVASE_config(input_shape=len(self.TF_Genes), output_shape=1, activation='softplus',
+                                    epochs=epochs, batch_size=batch_size, loss_type=loss_type)
     def fit(self,  X_):
+        #with suppress_stdout():
         self.model.fit(X_=X_, config=self.config)
         return self.model.TF2Gene_Prob, self.model.TF2Gene_Binary
 
@@ -56,7 +58,7 @@ Reference: J. Yoon, J. Jordon, M. van der Schaar, "INVASE: Instance-wise Variabl
 Paper Link: https://openreview.net/forum?id=BJg_roAcK7
 Contact: jsyoon0823@g.ucla.edu
 
----------------------------------------------------
+------------------------------------- --------------
 
 Instance-wise Variable Selection (INVASE) - with baseline networks
 '''
@@ -75,9 +77,8 @@ class INVASE_config():
             epochs: int = 2000,
             batch_size: int = 1000,
             tau: float = 1.0,  # 1.5, #1.5 #0.01
+            loss_type: str = 'poisson', # categorical_crossentropy, mean_squared_error
     ):
-
-        self.tau = tau
 
         self.latent_dim1 = 100      # Dimension of actor (selector) network
         self.latent_dim2 = 200      # Dimension of critic (discriminator) network
@@ -94,28 +95,25 @@ class INVASE_config():
         # Activation. (For Syn1 and 2, relu, others, selu)
         self.activation = activation
 
+        self.loss_type = loss_type
 
     def initialise(self):
         # Use Adam optimizer with learning rate = 0.0001
         optimizer = Adam(0.0001)
         # Build and compile the discriminator (critic)
-        self.discriminator = self.build_discriminator()
+        self.critic = self.build_critic()
         # Use categorical cross entropy as the loss
-        # self.discriminator.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['acc'])
-        self.discriminator.compile(loss='poisson', optimizer=optimizer, metrics=['acc'])
-        # self.discriminator.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['acc'])
+        self.critic.compile(loss=self.loss_type, optimizer=optimizer, metrics=['acc'])
 
         # Build the selector (actor)
-        self.selector = self.build_selector()
+        self.actor = self.build_actor()
         # Use custom loss (my loss)
-        self.selector.compile(loss=self.my_loss, optimizer=optimizer)
+        self.actor.compile(loss=self.my_loss, optimizer=optimizer)
 
         # Build and compile the value function
-        self.valfunction = self.build_valfunction()
+        self.baseline = self.build_baseline()
         # Use categorical cross entropy as the loss
-        # self.valfunction.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['acc'])
-        self.valfunction.compile(loss='poisson', optimizer=optimizer, metrics=['acc'])
-        # self.valfunction.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['acc'])
+        self.baseline.compile(loss=self.loss_type, optimizer=optimizer, metrics=['acc'])
 
     #%% Custom loss definition
     def my_loss(self, y_true, y_pred):
@@ -125,35 +123,36 @@ class INVASE_config():
 
         # Put all three in y_true
         # 1. selected probability
-        sel_prob = y_true[:, :d]
+        actor_out = y_true[:, :d]
         # 2. discriminator output
-        dis_prob = y_true[:, d:(d+self.output_shape)]
+        critic_out = y_true[:, d:(d+self.output_shape)]
         # 3. valfunction output
-        val_prob = y_true[:, (d+self.output_shape):(d+self.output_shape*2)]
+        baseline_out = y_true[:, (d+self.output_shape):(d+self.output_shape*2)]
         # 4. ground truth
-        y_final = y_true[:, (d+self.output_shape*2):]
+        y_out = y_true[:, (d+self.output_shape*2):]
 
-        # A1. Compute the rewards of the actor network
-        # change the reward to poisson log likelihood function
-        # Reward1 = tf.reduce_sum(y_final * tf.math.log(dis_prob + 1e-8), axis=1)
-        Reward1 = tf.reduce_sum(- dis_prob + y_final * tf.math.log(dis_prob + 1e-4), axis=1)
-        # A2. Compute the rewards of the actor network
-        # Reward2 = tf.reduce_sum(y_final * tf.math.log(val_prob + 1e-8), axis=1)
-        Reward2 = tf.reduce_sum(- val_prob + y_final * tf.math.log(val_prob + 1e-4), axis=1)
-        # Difference is the rewards
-        Reward = Reward1 - Reward2
-        Reward = tf.cast(Reward, tf.float32)
+        if self.loss_type == 'poisson':
+            critic_loss = -tf.reduce_sum(-critic_out + y_out * tf.math.log(critic_out + 1e-8), axis=1)
+            baseline_loss = -tf.reduce_sum(-baseline_out + y_out * tf.math.log(baseline_out + 1e-8), axis=1)
+        elif self.loss_type == 'categorical_crossentropy':
+            critic_loss = -tf.reduce_sum(y_out * tf.math.log(critic_out + 1e-8), axis=1)
+            baseline_loss = -tf.reduce_sum(y_out * tf.math.log(baseline_out + 1e-8), axis=1)
+        elif self.loss_type == 'mean_squared_error':
+            critic_loss = tf.reduce_mean(tf.math.square(critic_out - y_out))
+            baseline_loss = tf.reduce_mean(tf.math.square(baseline_out - y_out))
+
+        Reward = -(critic_loss - baseline_loss)
 
         # B. Policy gradient loss computation.
-        loss1 = Reward * tf.reduce_sum(sel_prob * K.log(y_pred + 1e-4) + (1-sel_prob) * K.log(1-y_pred + 1e-4), axis=1) - self.lamda * tf.reduce_mean(y_pred, axis=1)
+        custom_actor_loss = Reward * tf.reduce_sum(actor_out * K.log(y_pred + 1e-8) + (1-actor_out) * K.log(1-y_pred + 1e-8), axis=1) - self.lamda * tf.reduce_mean(y_pred, axis=1)
 
         # C. Maximize the loss1
-        loss = tf.reduce_mean(-loss1)
+        custom_actor_loss = tf.reduce_mean(-custom_actor_loss)
 
-        return loss
+        return custom_actor_loss
 
     #%% Generator (Actor)
-    def build_selector(self):
+    def build_actor(self):
 
         model = Sequential()
 
@@ -169,7 +168,7 @@ class INVASE_config():
         return Model(feature, select_prob)
 
     #%% Discriminator (Critic)
-    def build_discriminator(self):
+    def build_critic(self):
 
         model = Sequential()
 
@@ -194,7 +193,7 @@ class INVASE_config():
         return Model([feature, select], prob)
 
     #%% Value Function
-    def build_valfunction(self):
+    def build_baseline(self):
 
         model = Sequential()
 
@@ -229,7 +228,7 @@ class INVASE_config():
         return samples
 
     #%% Training procedure
-    def train(self, x_train, y_train):
+    def train(self, x_train, y_train, x_val=None, y_val=None):
         self.initialise()
         y_train = y_train.astype('float32')
         loss = pd.DataFrame()
@@ -243,31 +242,32 @@ class INVASE_config():
             y_batch = y_train[idx, :]
 
             # Generate a batch of probabilities of feature selection
-            gen_prob = self.selector.predict(x_batch)
+            gen_prob = self.actor.predict(x_batch)
 
             # Sampling the features based on the generated probability
-            sel_prob = self.Sample_M(gen_prob)
+            actor_out = self.Sample_M(gen_prob)
+            #actor_out = Sample_Concrete(self.tau, self.k)(gen_prob)
 
             # Compute the prediction of the critic based on the sampled features (used for selector training)
-            dis_prob = self.discriminator.predict([x_batch, sel_prob])
+            critic_out = self.critic.predict([x_batch, actor_out.astype(x_batch.dtype)])
 
             # Train the discriminator
-            d_loss = self.discriminator.train_on_batch([x_batch, sel_prob], y_batch)
+            d_loss = self.critic.train_on_batch([x_batch, actor_out], y_batch)
 
             #%% Train Valud function
 
             # Compute the prediction of the critic based on the sampled features (used for selector training)
-            val_prob = self.valfunction.predict(x_batch)
+            baseline_out = self.baseline.predict(x_batch)
 
             # Train the discriminator
-            v_loss = self.valfunction.train_on_batch(x_batch, y_batch)
+            v_loss = self.baseline.train_on_batch(x_batch, y_batch)
 
             #%% Train Generator
-            # Use three things as the y_true: sel_prob, dis_prob, and ground truth (y_batch)
-            y_batch_final = np.concatenate((sel_prob, np.asarray(dis_prob), np.asarray(val_prob), y_batch), axis=1)
+            # Use three things as the y_true: actor_out, critic_out, and ground truth (y_batch)
+            y_batch_final = np.concatenate((actor_out, np.asarray(critic_out), np.asarray(baseline_out), y_batch), axis=1)
 
             # Train the selector
-            g_loss = self.selector.train_on_batch(x_batch, y_batch_final)
+            g_loss = self.actor.train_on_batch(x_batch, y_batch_final)
 
 
             #%% Plot the progress
@@ -284,8 +284,8 @@ class INVASE_config():
     #%% Selected Features
     def Selected_Features(self, x_test):
         # determine the probability and binary selection output
-        Sel_Prob_Test = np.asarray(self.selector.predict(x_test))
+        Sel_Prob_Test =  np.asarray(self.actor.predict(x_test))
+        # Sel_Binary_Test = np.asarray(Sample_Concrete(self.tau, self.k).call_exp(Sel_Prob_Test))
         Sel_Binary_Test = np.asarray(self.Sample_M(Sel_Prob_Test))
 
         return Sel_Prob_Test, Sel_Binary_Test
-

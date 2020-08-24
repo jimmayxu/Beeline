@@ -54,7 +54,8 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
                 predDF = pd.read_csv(outDir + '/' +algo[0]+'/rankedEdges.csv', \
                                             sep = '\t', header =  0, index_col = None)
 
-                precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores_new(trueEdgesDF, predDF, directed = True, selfEdges = selfEdges)
+                precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores_new(trueEdgesDF, predDF, edges_TFTG=True)
+                """
                 if algo[0] == 'INVASE':
                     predDF = pd.read_csv(outDir + '/' + algo[0] + '/rankedEdges2.csv', \
                                          sep='\t', header=0, index_col=None)
@@ -62,7 +63,7 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
                     precisionDict['INVASE2'], recallDict['INVASE2'], FPRDict['INVASE2'], TPRDict['INVASE2'], AUPRC[
                         'INVASE2'], \
                     AUROC['INVASE2'] = computeScores_new(trueEdgesDF, predDF, directed=False, selfEdges=selfEdges)
-
+                """
             else:
                 print(outDir + '/' +algo[0]+'/rankedEdges.csv', \
                       ' does not exist. Skipping...')
@@ -132,7 +133,7 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
     return AUPRC, AUROC
 
 def computeScores_new(trueEdgesDF, predEdgeDF,
-                  directed=True, selfEdges=True, edges_TFTG=False):
+                   edges_TFTG=False):
     trueEdgesDF['importance'] = 1
     trueEdgesDF = trueEdgesDF.loc[:, ['Gene1', 'Gene2', 'importance']]
     gene_names = pd.Series(np.unique(trueEdgesDF.iloc[:,:2]))

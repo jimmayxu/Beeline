@@ -38,7 +38,7 @@ input_settings:
         - name: "INVASE"
           params:
               should_run: [True]
-              epochs: [70]
+              epochs: [50]
               batch_size: [1000]
 
 

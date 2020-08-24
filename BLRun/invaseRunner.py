@@ -4,26 +4,61 @@ from pathlib import Path
 import scipy.sparse as sp_sparse
 from Algorithms.INVASE import INVASE
 import numpy as np
+from sklearn import preprocessing
+import tensorflow as tf
+
 def generateInputs(RunnerObj):
     '''
     Function to generate desired inputs for INVASE.
     If the folder/files under RunnerObj.datadir exist, 
     this function will not do anything.
     '''
+
     if not RunnerObj.inputDir.joinpath("INVASE").exists():
         print("Input folder for INVASE does not exist, creating input folder...")
         RunnerObj.inputDir.joinpath("INVASE").mkdir(exist_ok=False)
 
-    #if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
-    ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
-                                 header=0, index_col=0)
-    ExpressionCounts = pd.DataFrame(np.random.poisson(ExpressionData), columns=ExpressionData.columns, index=ExpressionData.index)
-    Exp = ExpressionCounts.copy()
-    # Write .csv file
-    Exp.T.astype(int).to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
-                            sep='\t', header=True, index=True)
-    #ExpressionData.to_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData))
+    if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
+        ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
+                                     header = 0, index_col = 0)
 
+        # Write .csv file
+        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
+                             sep = '\t', header  = True, index = True)
+        """
+    if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
+        ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'),
+                                     header=0, index_col=0)
+        Exp = ExpressionCounts.copy()
+        ExpressionData = np.log(Exp + 1)
+        ExpressionData = pd.DataFrame(preprocessing.scale(ExpressionData), columns=ExpressionData.columns, index=ExpressionData.index)
+
+        # Write .csv file
+        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
+                                sep='\t', header=True, index=True)
+    """
+    """
+    #if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
+    ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'),
+                                 header=0, index_col=0)
+    Exp = ExpressionCounts.copy()
+    ExpressionData = np.log(Exp + 1)
+    # Write .csv file
+    ExpressionData.T.astype(int).to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
+                            sep='\t', header=True, index=True)
+    """
+    """
+    #use BEELINE provided dataset 
+    if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
+        ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
+                                     header=0, index_col=0)
+        ExpressionCounts = pd.DataFrame(np.random.poisson(ExpressionData), columns=ExpressionData.columns, index=ExpressionData.index)
+        Exp = ExpressionCounts.copy()
+        # Write .csv file
+        Exp.T.astype(int).to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
+                                sep='\t', header=True, index=True)
+        #ExpressionData.to_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData))
+    """
 
 def run(RunnerObj):
     '''
@@ -63,7 +98,7 @@ def run(RunnerObj):
 
     epochs = int(RunnerObj.params['epochs'])
     batch_size = int(RunnerObj.params['batch_size'])
-    method = INVASE(epochs=epochs, batch_size=batch_size, **kwargs)
+    method = INVASE(epochs=epochs, batch_size=batch_size, loss_type='mean_squared_error', **kwargs)
 
     X_ = sp_sparse.csc_matrix(inDF.values)
     TF2Gene_Prob, TF2Gene_Binary = method.fit(X_)
