@@ -12,7 +12,7 @@ from itertools import product, permutations
 from multiprocessing import Pool, cpu_count
 from networkx.convert_matrix import from_pandas_adjacency
 
-def EarlyPrec(evalObject, algorithmName, TFEdges = False):
+def EarlyPrec(evalObject, algorithmName, TFEdges = True):
     '''
     Computes early precision for a given algorithm for each dataset.
     We define early precision as the fraction of true 
@@ -49,14 +49,16 @@ def EarlyPrec(evalObject, algorithmName, TFEdges = False):
 
         #algos = evalObject.input_settings.algorithms
         rank_path = outDir + "/rankedEdges.csv"
+
+        dataname = dataset["name"] + '+' + dataset["trueEdges"][:-4]
         if not os.path.isdir(outDir):
-            rankDict[dataset["name"]] = set([])
+            rankDict[dataname] = set([])
             continue
         try:
             predDF = pd.read_csv(rank_path, sep="\t", header=0, index_col=None)
         except:
             print("\nSkipping early precision computation for ", algorithmName, "on path", outDir)
-            rankDict[dataset["name"]] = set([])
+            rankDict[dataname] = set([])
             continue
 
         predDF = predDF.loc[(predDF['Gene1'] != predDF['Gene2'])]
@@ -116,19 +118,20 @@ def EarlyPrec(evalObject, algorithmName, TFEdges = False):
             bestVal = max(nonZeroMin, edgeWeightTopk)
 
             newDF = predDF.loc[(predDF['EdgeWeight'] >= bestVal)]
-            rankDict[dataset["name"]] = set(newDF['Gene1'] + "|" + newDF['Gene2'])
+            rankDict[dataname] = set(newDF['Gene1'] + "|" + newDF['Gene2'])
         else:
             print("\nSkipping early precision computation for on path ", rank_path,"due to lack of predictions.")
-            rankDict[dataset["name"]] = set([])
+            rankDict[dataname] = set([])
     Eprec = {}
     Erec = {}
     for dataset in tqdm(evalObject.input_settings.datasets):
-        if len(rankDict[dataset["name"]]) != 0:
-            intersectionSet = rankDict[dataset["name"]].intersection(trueEdges)
-            Eprec[dataset["name"]] = len(intersectionSet)/len(rankDict[dataset["name"]])
-            Erec[dataset["name"]] = len(intersectionSet)/len(trueEdges)
+        dataname = dataset["name"] + '+' + dataset["trueEdges"][:-4]
+        if len(rankDict[dataname]) != 0:
+            intersectionSet = rankDict[dataname].intersection(trueEdges)
+            Eprec[dataname] = len(intersectionSet)/len(rankDict[dataname])
+            Erec[dataname] = len(intersectionSet)/len(trueEdges)
         else:
-            Eprec[dataset["name"]] = 0
-            Erec[dataset["name"]] = 0
+            Eprec[dataname] = 0
+            Erec[dataname] = 0
 
     return(Eprec)

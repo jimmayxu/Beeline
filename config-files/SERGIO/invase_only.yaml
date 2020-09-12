@@ -19,6 +19,50 @@ input_settings:
     #   trueEdges: Name of the refrence network file in the
     #              edge list format. Needed for evaluation.
     datasets:
+        - name: "SERGIO-450-0"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-1"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+
+        - name: "SERGIO-450-2"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-3"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-4"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-0-45"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-1-45"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-2-45"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-3-45"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-4-45"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "SERGIO-450-0-86"
+          exprData: "ExpressionData.csv"
+          trueEdges: "refNetwork.csv"
 
         - name: "SERGIO-450-1-86"
           exprData: "ExpressionData.csv"
@@ -50,8 +94,11 @@ input_settings:
         - name: "INVASE"
           params:
               should_run: [True]
-              epochs: [50]
+              iteration: [100]
               batch_size: [1000]
+              TF_file: ['../TFs450G.csv']
+              TG_file: ['../TGs450G.csv']
+              loss_type: ['poisson']
 
 
         - name: "PIDC"

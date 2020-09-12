@@ -17,7 +17,7 @@ def generateInputs(RunnerObj):
     if not RunnerObj.inputDir.joinpath("INVASE").exists():
         print("Input folder for INVASE does not exist, creating input folder...")
         RunnerObj.inputDir.joinpath("INVASE").mkdir(exist_ok=False)
-
+    """
     if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)
@@ -25,18 +25,16 @@ def generateInputs(RunnerObj):
         # Write .csv file
         ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
                              sep = '\t', header  = True, index = True)
-        """
-    if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
-        ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'),
-                                     header=0, index_col=0)
-        Exp = ExpressionCounts.copy()
-        ExpressionData = np.log(Exp + 1)
-        ExpressionData = pd.DataFrame(preprocessing.scale(ExpressionData), columns=ExpressionData.columns, index=ExpressionData.index)
-
-        # Write .csv file
-        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
-                                sep='\t', header=True, index=True)
     """
+    #if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
+    ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'),
+                                 header=0, index_col=0)
+    ExpressionData = ExpressionCounts.copy()
+    ExpressionData = pd.DataFrame(preprocessing.scale(ExpressionData), columns=ExpressionData.columns, index=ExpressionData.index)
+
+    # Write .csv file
+    ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv"),
+                            sep='\t', header=True, index=True)
     """
     #if not RunnerObj.inputDir.joinpath("INVASE/ExpressionData.csv").exists():
     ExpressionCounts = pd.read_csv(RunnerObj.inputDir.joinpath('ExpressionCounts.csv'),
@@ -69,15 +67,21 @@ def run(RunnerObj):
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/INVASE/"
     os.makedirs(outDir, exist_ok=True)
     inDF = pd.read_csv(inputPath, sep='\t', index_col=0, header=0)
-    gene_names = inDF.columns
-    if os.path.exists(str(RunnerObj.inputDir) + '/tfs.csv'):
-        known_TF_Genes = pd.read_csv(str(RunnerObj.inputDir) + '/tfs.csv')['TF']
-        TF_Genes = list(gene_names.intersection(known_TF_Genes))
-        target_Genes = list(set(gene_names) - set(TF_Genes))
+    gene_names = inDF.columns.str.upper()
+
+    TF_file = RunnerObj.params.get('TF_file', None)
+    TG_file = RunnerObj.params.get('TG_file', None)
+    loss_type = RunnerObj.params.get('loss_type', None)
+    if TF_file is not None:
+        TF_Genes = pd.read_csv(os.path.join(str(RunnerObj.inputDir), TF_file))['TF'].str.upper()
+        TF_Genes = TF_Genes[TF_Genes.isin(gene_names)]
     else:
         TF_Genes = list(gene_names)
-        target_Genes = list(gene_names)
 
+    if TG_file is not None:
+        target_Genes = pd.read_csv(os.path.join(str(RunnerObj.inputDir), TG_file))['TG'].str.upper()
+    else:
+        target_Genes = list(gene_names)
     """
     trueEdges = pd.read_csv(os.path.join(str(RunnerObj.inputDir), RunnerObj.trueEdges))
     gene_network = set(trueEdges.values.flatten())
@@ -96,9 +100,10 @@ def run(RunnerObj):
         {'target_Genes': target_Genes}
     )
 
-    epochs = int(RunnerObj.params['epochs'])
+    iteration = int(RunnerObj.params['iteration'])
     batch_size = int(RunnerObj.params['batch_size'])
-    method = INVASE(epochs=epochs, batch_size=batch_size, loss_type='mean_squared_error', **kwargs)
+    method = INVASE(iteration=iteration, batch_size=batch_size, loss_type=loss_type, **kwargs)
+    #method = INVASE(epochs=epochs, batch_size=batch_size, loss_type='poisson', **kwargs)
 
     X_ = sp_sparse.csc_matrix(inDF.values)
     TF2Gene_Prob, TF2Gene_Binary = method.fit(X_)

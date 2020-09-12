@@ -1,10 +1,19 @@
 """
 python BLEvaluator.py --config 'config-files/Curated/GSD_all.yaml'
-python BLEvaluator.py --config 'config-files/scRNA-Seq/algo_all.yaml'
+python BLEvaluator.py --config 'config-files/scRNA-Seq/algo_all1.yaml'
 
-python BLEvaluator.py --config 'config-files/SERGIO/algo.yaml'
+python BLEvaluator.py --config 'config-files/SERGIO/algo1.yaml'
 python BLEvaluator.py --config 'config-files/SERGIO/algo_all100.yaml'
+python BLEvaluator.py --config 'config-files/SERGIO/algo_all1.yaml'
 python BLEvaluator.py --config 'config-files/SERGIO/algo_all.yaml'
+
+python BLEvaluator.py --config 'config-files/scRNA-Seq/algo_all1.yaml'
+
+python BLEvaluator.py --config 'config-files/scRNA-Seq/hESC/algo_all1.yaml'
+
+python BLEvaluator.py --config 'config-files/scRNA-Seq/mHSC/algo_all1.yaml'
+
+python BLEvaluator.py --config 'config-files/scRNA-Seq/mHSC/algo_all1.yaml'
 """
 #!/usr/bin/env python
 # coding: utf-8
@@ -38,7 +47,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('-c','--config', default='config-files/Curated/GSD_all.yaml',
+    parser.add_argument('-c','--config', default='config-files/scRNA-Seq/mHSC/algo_all1.yaml',
         help="Configuration file containing list of datasets "
               "algorithms and output specifications.\n")
     

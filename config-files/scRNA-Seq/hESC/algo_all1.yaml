@@ -21,10 +21,8 @@ input_settings:
     datasets:
         - name: "hESC"
           exprData: "ExpressionData.csv"
-          #countData: "ExpressionCounts.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "hESC-ChIP-seq-network.csv"
-
+          #cellData: "PseudoTime.csv"
+          trueEdges: "STRING-network_fit.csv"
 
     # Denotes a list of algorithms to run. Each has the following parameters:
     #   name: Name of the algorithm. Must be recognized by the pipeline, see
@@ -37,10 +35,15 @@ input_settings:
     #
     algorithms:
 
+        - name: "INVASE"
+          params:
+              should_run: [True]
+              epochs: [70]
+              batch_size: [1000]
 
         - name: "PIDC"
           params:
-              should_run: [True]
+              should_run: [False]
 
 
         - name: "GRNVBEM"
@@ -60,7 +63,7 @@ input_settings:
 
         - name: "PPCOR"
           params:
-              should_run: [True]
+              should_run: [False]
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]

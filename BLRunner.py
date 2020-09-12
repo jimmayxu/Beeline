@@ -6,11 +6,28 @@ python BLRunner.py --config 'config-files/Curated/GSD.yaml'
 
 
 python BLRunner.py --config 'config-files/scRNA-Seq/invase_only100.yaml'
-python BLRunner.py --config 'config-files/scRNA-Seq/algo.yaml'
+python BLRunner.py --config 'config-files/scRNA-Seq/algo1.yaml'
 
 
 python BLRunner.py --config 'config-files/SERGIO/invase_only.yaml'
-python BLRunner.py --config 'config-files/SERGIO/algo_all.yaml'
+python BLRunner.py --config 'config-files/SERGIO/algo_all1.yaml'
+
+python BLRunner.py --config 'config-files/SERGIO/invase_only.yaml'
+
+bsub -o log/job.out -J 'jobname' -G 'teichlab' BLRunner.py
+
+python BLRunner.py --config 'config-files/scRNA-Seq/invase_only1.yaml'
+python BLRunner.py --config 'config-files/scRNA-Seq/algo1.yaml'
+
+python BLRunner.py --config 'config-files/scRNA-Seq/mHSC/invase_only1.yaml'
+python BLRunner.py --config 'config-files/scRNA-Seq/mHSC/algo1.yaml'
+
+python BLRunner.py --config 'config-files/scRNA-Seq/hESC/algo1.yaml'
+
+
+
+bsub -q gpu-cellgeni  -J 'SER_co' -o log/SERGIO_counts.out  -G 'teichlab' -gpu - python BLRunner.py --config 'config-files/SERGIO/invase_only.yaml'
+
 """
 
 
@@ -40,7 +57,6 @@ import pandas as pd
 
 import BLRun as br
 yaml.warnings({'YAMLLoadWarning': False})
-os.nice(20)
 
 def get_parser() -> argparse.ArgumentParser:
     '''
@@ -50,7 +66,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Run pathway reconstruction pipeline.')
 
-    parser.add_argument('--config', default='config-files/SERGIO/invase_only.yaml',
+    parser.add_argument('--config', default='config-files/scRNA-Seq/mHSC/invase_only1.yaml',
         help='Path to config file')
 
     return parser

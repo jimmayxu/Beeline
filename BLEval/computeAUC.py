@@ -56,17 +56,21 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
 
                 precisionDict[algo[0]], recallDict[algo[0]], FPRDict[algo[0]], TPRDict[algo[0]], AUPRC[algo[0]], AUROC[algo[0]] = computeScores_new(trueEdgesDF, predDF, edges_TFTG=True)
                 """
-                if algo[0] == 'INVASE':
-                    predDF = pd.read_csv(outDir + '/' + algo[0] + '/rankedEdges2.csv', \
-                                         sep='\t', header=0, index_col=None)
-
-                    precisionDict['INVASE2'], recallDict['INVASE2'], FPRDict['INVASE2'], TPRDict['INVASE2'], AUPRC[
-                        'INVASE2'], \
-                    AUROC['INVASE2'] = computeScores_new(trueEdgesDF, predDF, directed=False, selfEdges=selfEdges)
-                """
+                name = 'random_%s' %algo[0]
+                import random
+                gene2 = random.choices(list(set(trueEdgesDF['Gene2'])), k=len(predDF['Gene2']))
+                gene1 = random.choices(list(set(trueEdgesDF['Gene1'])), k=len(predDF['Gene1']))
+                predDF['Gene2'] = gene2
+                predDF['Gene1'] = gene1
+                precisionDict[name], recallDict[name], FPRDict[name], TPRDict[name], AUPRC[
+                    name], \
+                AUROC[name] = computeScores_new(trueEdgesDF, predDF, edges_TFTG=True)
+                 """
             else:
                 print(outDir + '/' +algo[0]+'/rankedEdges.csv', \
                       ' does not exist. Skipping...')
+
+
             PRName = '/PRplot'
             ROCName = '/ROCplot'
     else:
@@ -134,7 +138,7 @@ def PRROC(dataDict, inputSettings, directed = True, selfEdges = False, plotFlag 
 
 def computeScores_new(trueEdgesDF, predEdgeDF,
                    edges_TFTG=False):
-    trueEdgesDF['importance'] = 1
+    trueEdgesDF.loc[:, 'importance'] = 1
     trueEdgesDF = trueEdgesDF.loc[:, ['Gene1', 'Gene2', 'importance']]
     gene_names = pd.Series(np.unique(trueEdgesDF.iloc[:,:2]))
     TF_Genes = trueEdgesDF['Gene1']

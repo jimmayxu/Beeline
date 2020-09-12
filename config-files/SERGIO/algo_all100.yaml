@@ -6,7 +6,7 @@ input_settings:
     input_dir : "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "scRNA-Seq"
+    dataset_dir: "SERGIO100"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
@@ -19,10 +19,66 @@ input_settings:
     #   trueEdges: Name of the refrence network file in the
     #              edge list format. Needed for evaluation.
     datasets:
-        - name: "hESC"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "hESC-ChIP-seq-network.csv"
+
+      - name: "SERGIO-100-0"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-1"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-2"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-3"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-4"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+        
+      - name: "SERGIO-100-0-40"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-1-40"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-2-40"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-3-40"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-4-40"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-0-70"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-1-70"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-2-70"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-3-70"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
+
+      - name: "SERGIO-100-4-70"
+        exprData: "ExpressionData.csv"
+        trueEdges: "refNetwork.csv"
 
 
     # Denotes a list of algorithms to run. Each has the following parameters:
@@ -35,16 +91,16 @@ input_settings:
     #       should be specified in the params map for a given algorithm
     #
     algorithms:
+
         - name: "INVASE"
           params:
               should_run: [True]
-              epochs: [50]
+              iteration: [50]
               batch_size: [1000]
-
 
         - name: "PIDC"
           params:
-              should_run: [False]
+              should_run: [True]
 
 
         - name: "GRNVBEM"
@@ -52,21 +108,19 @@ input_settings:
               should_run: [False]
 
 
-
         - name: "GENIE3"
           params:
               should_run: [False]
 
 
-
         - name: "GRNBOOST2"
           params:
-              should_run: [False]
+              should_run: [True]
 
 
         - name: "PPCOR"
           params:
-              should_run: [False]
+              should_run: [True]
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]

@@ -43,21 +43,5 @@ cd $BASEDIR/Algorithms/SCINGE/
 docker build -q -t scinge:base .
 echo "Docker container for SCINGE is built and tagged as scinge:base"
 
-cd $BASEDIR/Algorithms/SCNS/
-docker build -q -t scns:base .
-echo "Docker container for SCNS is built and tagged as scns:base"
-
-cd $BASEDIR/Algorithms/SCODE/
-docker build -q -t scode:base .
-echo "Docker container for SCODE is built and tagged as scode:base"
-
-cd $BASEDIR/Algorithms/SCRIBE/
-docker build -q -t scribe:base .
-echo "Docker container for SCRIBE is built and tagged as sincerities:base"
-
-cd $BASEDIR/Algorithms/SINCERITIES/
-docker build -q -t sincerities:base .
-echo "Docker container for SINCERITIES is built and tagged as sincerities:base"
-
 cd $BASEDIR
 
